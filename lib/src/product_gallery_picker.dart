@@ -5,7 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProductGalleryPicker extends StatefulWidget {
-  const ProductGalleryPicker({Key? key}) : super(key: key);
+  int? maxImages;
+  int? maxImageSizeInMB;
+  String? addImagesTitle;
+  Color? primaryColor;
+  Color? dottedBorderColor;
+
+  ProductGalleryPicker(this.maxImages, this.addImagesTitle,
+      this.maxImageSizeInMB, this.primaryColor, this.dottedBorderColor);
 
   @override
   State<ProductGalleryPicker> createState() => _ProductGalleryPickerState();
@@ -32,10 +39,10 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
       final mb = kb / 1024;
 
       print('$mb');
-      if (mb > 4) {
+      if (mb > widget.maxImageSizeInMB!) {
         final snackBar = SnackBar(
           content: Text(
-            "Une ou plusieurs images ont dépassé la taille maximale 4 Mo",
+            "One or more images exceeded the maximum size ${widget.maxImageSizeInMB!}MB",
             style: TextStyle(fontWeight: FontWeight.w500),
           ),
           backgroundColor: Colors.red,
@@ -52,8 +59,8 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                 imageFile: File(pickedFile.path), type: 'button');
             imagesFiles.add(buttonAdd);
           } else {
-            if (imagesFiles.length == 10) {
-              imagesFiles.removeAt(9);
+            if (imagesFiles.length == widget.maxImages) {
+              imagesFiles.removeAt(widget.maxImages! - 1);
               imagesFiles.add(imageUpload);
             } else {
               imagesFiles.insert(imagesFiles.length - 1, imageUpload);
@@ -68,7 +75,8 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
         imageQuality: 50,
       );
 
-      int countFiles = (pickedMultiFiles.length + imagesFiles.length) - 11;
+      int countFiles = (pickedMultiFiles.length + imagesFiles.length) -
+          (widget.maxImages! + 1);
       int stopLoop = countFiles > 0
           ? pickedMultiFiles.length - countFiles
           : pickedMultiFiles.length;
@@ -79,10 +87,10 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
         final mb = kb / 1024;
 
         print('$mb');
-        if (mb > 4) {
+        if (mb > widget.maxImageSizeInMB!) {
           final snackBar = SnackBar(
             content: Text(
-              "Une ou plusieurs images ont dépassé la taille maximale 4 Mo",
+              "One or more images exceeded the maximum size ${widget.maxImageSizeInMB!}MB",
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
             backgroundColor: Colors.red,
@@ -99,8 +107,8 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                   imageFile: File(pickedMultiFiles[i].path), type: 'button');
               imagesFiles.add(buttonAdd);
             } else {
-              if (imagesFiles.length == 10) {
-                imagesFiles.removeAt(9);
+              if (imagesFiles.length == widget.maxImages!) {
+                imagesFiles.removeAt(widget.maxImages! - 1);
                 imagesFiles.add(imageUpload);
               } else {
                 imagesFiles.insert(imagesFiles.length - 1, imageUpload);
@@ -113,7 +121,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
   }
 
   void showImagePicker(context, int index) {
-    if (imagesFiles.length < 11) {
+    if (imagesFiles.length < (widget.maxImages! + 1)) {
       showModalBottomSheet(
           context: context,
           shape: RoundedRectangleBorder(
@@ -128,7 +136,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                 Container(
                   margin: EdgeInsets.fromLTRB(25, 20, 10, 0),
                   child: Text(
-                    "Add images",
+                    "${widget.addImagesTitle!}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
@@ -184,8 +192,9 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
   }
 
   int getImagesLength() {
-    if (imagesFiles.length == 10 && imagesFiles[9].type == 'image') {
-      return 10;
+    if (imagesFiles.length == widget.maxImages! &&
+        imagesFiles[widget.maxImages! - 1].type == 'image') {
+      return widget.maxImages!;
     } else {
       return imagesFiles.length - 1;
     }
@@ -213,7 +222,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                           borderRadius: BorderRadius.circular(15),
                         )),
                     child: DottedBorder(
-                      color: Colors.red.shade200,
+                      color: widget.dottedBorderColor!,
                       strokeWidth: 2,
                       dashPattern: [10, 8],
                       strokeCap: StrokeCap.round,
@@ -234,17 +243,17 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                               margin: EdgeInsets.only(top: 20),
                               child: Icon(
                                 Icons.add_rounded,
-                                color: Colors.red,
+                                color: widget.primaryColor!,
                                 size: 80,
                               ),
                             ),
                             Text(
-                              "Add images",
+                              "${widget.addImagesTitle!}",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 21,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.red,
+                                color: widget.primaryColor!,
                               ),
                             ),
                           ],
@@ -282,7 +291,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                           ),
                           child: Center(
                             child: Text(
-                              '${getImagesLength()}/10',
+                              '${getImagesLength()}/${widget.maxImages!}',
                               style: TextStyle(
                                 color: Colors.white,
                                 letterSpacing: 1,
@@ -334,7 +343,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                                                 BorderRadius.circular(10),
                                             side: BorderSide(
                                               color: (i == selectedPhoto)
-                                                  ? Colors.red
+                                                  ? widget.primaryColor!
                                                   : Colors.white,
                                               width: (i == selectedPhoto)
                                                   ? 2.5
@@ -359,8 +368,11 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                                           } else {
                                             if (i == selectedPhoto)
                                               selectedPhoto = 0;
-                                            if (imagesFiles.length == 10 &&
-                                                imagesFiles[9].type ==
+                                            if (imagesFiles.length ==
+                                                    widget.maxImages! &&
+                                                imagesFiles[widget.maxImages! -
+                                                            1]
+                                                        .type ==
                                                     'image') {
                                               imagesFiles.removeAt(i);
 
@@ -382,7 +394,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                                         margin: EdgeInsets.all(0),
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.red,
+                                          color: widget.primaryColor!,
                                         ),
                                         child: Icon(
                                           Icons.close_rounded,
@@ -409,7 +421,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(4),
                                       child: DottedBorder(
-                                        color: Colors.red.shade200,
+                                        color: widget.dottedBorderColor!,
                                         strokeWidth: 2,
                                         dashPattern: [6, 5],
                                         strokeCap: StrokeCap.round,
@@ -418,7 +430,7 @@ class _ProductGalleryPickerState extends State<ProductGalleryPicker> {
                                         child: Center(
                                           child: Icon(
                                             Icons.add_rounded,
-                                            color: Colors.red,
+                                            color: widget.primaryColor!,
                                             size: 35,
                                           ),
                                         ),
